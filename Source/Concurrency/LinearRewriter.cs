@@ -16,19 +16,21 @@ public class LinearRewriter
 
   private ConcurrencyOptions options;
 
+  private List<IdentifierExpr> frame;
+  
   private int? layerNum;
 
-  public LinearRewriter(ConcurrencyOptions options, Monomorphizer monomorphizer, int? layerNum)
+  public LinearRewriter(ConcurrencyOptions options, Monomorphizer monomorphizer, List<IdentifierExpr> frame, int? layerNum)
   {
     this.monomorphizer = monomorphizer;
     this.options = options;
+    this.frame = frame;
     this.layerNum = layerNum;
   }
   
-  public bool IsPrimitive(Procedure proc)
+  public static bool IsPrimitive(DeclWithFormals decl)
   {
-    var value = monomorphizer.GetOriginalDecl(proc);
-    return value != null && primitives.Contains(value.Name);
+    return primitives.Contains(decl.Name);
   }
   
   public List<Cmd> RewriteCmdSeq(List<Cmd> cmdSeq)
@@ -36,7 +38,7 @@ public class LinearRewriter
     var newCmdSeq = new List<Cmd>();
     foreach (var cmd in cmdSeq)
     {
-      if (cmd is CallCmd callCmd && IsPrimitive(callCmd.Proc))
+      if (cmd is CallCmd callCmd && IsPrimitive(monomorphizer.GetOriginalDecl(callCmd.Proc)))
       {
         newCmdSeq.AddRange(RewriteCallCmd(callCmd));
       }
@@ -170,7 +172,7 @@ public class LinearRewriter
       ExprHelper.FunctionCall(lmapConstructor, ExprHelper.FunctionCall(mapConstFunc1, Expr.False),
         ExprHelper.FunctionCall(mapConstFunc2, Default(type)))));
     
-    CivlUtil.ResolveAndTypecheck(options, cmdSeq);
+    ResolveAndTypecheck(options, cmdSeq);
     return cmdSeq;
   }
   
@@ -180,8 +182,8 @@ public class LinearRewriter
       out Function lsetConstructor, out Function lvalConstructor);
     
     var cmdSeq = new List<Cmd>();
-    var path = callCmd.Ins[0];
-    var k = callCmd.Ins[1];
+    var k = callCmd.Ins[0];
+    var path = callCmd.Ins[1];
     var l = callCmd.Outs[0].Decl;
     
     var mapConstFunc = MapConst(refType, Type.Bool);
@@ -196,7 +198,7 @@ public class LinearRewriter
     cmdSeq.Add(
       CmdHelper.AssignCmd(CmdHelper.FieldAssignLhs(path, "dom"),ExprHelper.FunctionCall(mapDiffFunc, Dom(path), k)));
     
-    CivlUtil.ResolveAndTypecheck(options, cmdSeq);
+    ResolveAndTypecheck(options, cmdSeq);
     return cmdSeq;
   }
 
@@ -217,7 +219,7 @@ public class LinearRewriter
         ExprHelper.FunctionCall(mapOrFunc, Dom(path2), Dom(path1)),
         ExprHelper.FunctionCall(mapIteFunc, Dom(path2), Val(path2), Val(path1)))));
     
-    CivlUtil.ResolveAndTypecheck(options, cmdSeq);
+    ResolveAndTypecheck(options, cmdSeq);
     return cmdSeq;
   }
 
@@ -237,7 +239,7 @@ public class LinearRewriter
     var lmapDerefFunc = LmapDeref(type);
     cmdSeq.Add(CmdHelper.AssignCmd(v.Decl, ExprHelper.FunctionCall(lmapDerefFunc, path, k)));
     
-    CivlUtil.ResolveAndTypecheck(options, cmdSeq);
+    ResolveAndTypecheck(options, cmdSeq);
     return cmdSeq;
   }
   
@@ -256,7 +258,7 @@ public class LinearRewriter
 
     cmdSeq.Add(CmdHelper.AssignCmd(CmdHelper.MapAssignLhs(Val(path), new List<Expr>() { k }), v));
     
-    CivlUtil.ResolveAndTypecheck(options, cmdSeq);
+    ResolveAndTypecheck(options, cmdSeq);
     return cmdSeq;
   }
 
@@ -280,7 +282,7 @@ public class LinearRewriter
         ExprHelper.FunctionCall(mapOrFunc, Dom(path), ExprHelper.FunctionCall(mapOneFunc, k)),
         ExprHelper.FunctionCall(mapIteFunc, Dom(path), Val(path), ExprHelper.FunctionCall(mapConstFunc, v)))));
     
-    CivlUtil.ResolveAndTypecheck(options, cmdSeq);
+    ResolveAndTypecheck(options, cmdSeq);
     return cmdSeq;
   }
 
@@ -306,7 +308,7 @@ public class LinearRewriter
       CmdHelper.AssignCmd(CmdHelper.FieldAssignLhs(path, "dom"),
         ExprHelper.FunctionCall(mapDiffFunc, Dom(path), ExprHelper.FunctionCall(mapOneFunc, k))));
     
-    CivlUtil.ResolveAndTypecheck(options, cmdSeq);
+    ResolveAndTypecheck(options, cmdSeq);
     return cmdSeq;
   }
 
@@ -321,7 +323,7 @@ public class LinearRewriter
     var mapConstFunc = MapConst(type, Type.Bool);
     cmdSeq.Add(CmdHelper.AssignCmd(l, ExprHelper.FunctionCall(lsetConstructor,ExprHelper.FunctionCall(mapConstFunc, Expr.False))));
     
-    CivlUtil.ResolveAndTypecheck(options, cmdSeq);
+    ResolveAndTypecheck(options, cmdSeq);
     return cmdSeq;
   }
   
@@ -331,23 +333,20 @@ public class LinearRewriter
       out Function lsetConstructor, out Function lvalConstructor);
     
     var cmdSeq = new List<Cmd>();
-    var path = callCmd.Ins[0];
-    var k = callCmd.Ins[1];
-    var l = callCmd.Outs[0].Decl;
+    var k = callCmd.Ins[0];
+    var path = callCmd.Ins[1];
     
     var mapConstFunc = MapConst(type, Type.Bool);
     var mapImpFunc = MapImp(type);
     cmdSeq.Add(AssertCmd(callCmd.tok,
-      Expr.Eq(ExprHelper.FunctionCall(mapImpFunc, k, Dom(path)), ExprHelper.FunctionCall(mapConstFunc, Expr.True)),
+      Expr.Eq(ExprHelper.FunctionCall(mapImpFunc, Dom(k), Dom(path)), ExprHelper.FunctionCall(mapConstFunc, Expr.True)),
       "Lset_Split failed"));
-    
-    cmdSeq.Add(CmdHelper.AssignCmd(l,ExprHelper.FunctionCall(lsetConstructor, k)));
 
     var mapDiffFunc = MapDiff(type);
     cmdSeq.Add(
-      CmdHelper.AssignCmd(CmdHelper.FieldAssignLhs(path, "dom"),ExprHelper.FunctionCall(mapDiffFunc, Dom(path), k)));
+      CmdHelper.AssignCmd(CmdHelper.FieldAssignLhs(path, "dom"),ExprHelper.FunctionCall(mapDiffFunc, Dom(path), Dom(k))));
     
-    CivlUtil.ResolveAndTypecheck(options, cmdSeq);
+    ResolveAndTypecheck(options, cmdSeq);
     return cmdSeq;
   }
 
@@ -365,7 +364,7 @@ public class LinearRewriter
       CmdHelper.ExprToAssignLhs(path2),
       ExprHelper.FunctionCall(lsetConstructor, ExprHelper.FunctionCall(mapOrFunc, Dom(path2), Dom(path1)))));
     
-    CivlUtil.ResolveAndTypecheck(options, cmdSeq);
+    ResolveAndTypecheck(options, cmdSeq);
     return cmdSeq;
   }
   
@@ -375,22 +374,19 @@ public class LinearRewriter
       out Function lsetConstructor, out Function lvalConstructor);
 
     var cmdSeq = new List<Cmd>();
-    var path = callCmd.Ins[0];
-    var k = callCmd.Ins[1];
-    var l = callCmd.Outs[0].Decl;
+    var k = callCmd.Ins[0];
+    var path = callCmd.Ins[1];
     
     var lsetContainsFunc = LsetContains(type);
-    cmdSeq.Add(AssertCmd(callCmd.tok, ExprHelper.FunctionCall(lsetContainsFunc, path, k), "Lval_Split failed"));
-    
-    cmdSeq.Add(CmdHelper.AssignCmd(l,ExprHelper.FunctionCall(lvalConstructor, k)));
+    cmdSeq.Add(AssertCmd(callCmd.tok, ExprHelper.FunctionCall(lsetContainsFunc, path, ExprHelper.FieldAccess(k, "val")), "Lval_Split failed"));
 
     var mapOneFunc = MapOne(type);
     var mapDiffFunc = MapDiff(type);
     cmdSeq.Add(
       CmdHelper.AssignCmd(CmdHelper.FieldAssignLhs(path, "dom"),
-        ExprHelper.FunctionCall(mapDiffFunc, Dom(path), ExprHelper.FunctionCall(mapOneFunc, k))));
+        ExprHelper.FunctionCall(mapDiffFunc, Dom(path), ExprHelper.FunctionCall(mapOneFunc, ExprHelper.FieldAccess(k, "val")))));
     
-    CivlUtil.ResolveAndTypecheck(options, cmdSeq);
+    ResolveAndTypecheck(options, cmdSeq);
     return cmdSeq;
   }
   
@@ -410,7 +406,7 @@ public class LinearRewriter
       ExprHelper.FunctionCall(lsetConstructor,
         ExprHelper.FunctionCall(mapOrFunc, Dom(path2), ExprHelper.FunctionCall(mapOneFunc, Val(l))))));
     
-    CivlUtil.ResolveAndTypecheck(options, cmdSeq);
+    ResolveAndTypecheck(options, cmdSeq);
     return cmdSeq;
   }
 
@@ -428,5 +424,18 @@ public class LinearRewriter
     lsetConstructor = lsetTypeCtorDecl.Constructors[0];
     var lvalTypeCtorDecl = (DatatypeTypeCtorDecl)monomorphizer.InstantiateTypeCtorDecl("Lval", actualTypeParams);
     lvalConstructor = lvalTypeCtorDecl.Constructors[0];
+  }
+  
+  private void ResolveAndTypecheck(CoreOptions options, IEnumerable<Absy> absys)
+  {
+    var rc = new ResolutionContext(null, options);
+    absys.Iter(absy => absy.Resolve(rc));
+    if (rc.ErrorCount != 0)
+    {
+      return;
+    }
+    var tc = new TypecheckingContext(null, options);
+    tc.Frame = frame;
+    absys.Iter(absy => absy.Typecheck(tc));
   }
 }

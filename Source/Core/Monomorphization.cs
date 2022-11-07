@@ -486,7 +486,7 @@ namespace Microsoft.Boogie
         var instantiatedVariables =
           variables.Select(x => (Formal) x).Select(x =>
               new Formal(x.tok, new TypedIdent(x.TypedIdent.tok, x.TypedIdent.Name, VisitType(x.TypedIdent.Type)),
-                x.InComing))
+                x.InComing, x.Attributes == null ? null : VisitQKeyValue(x.Attributes)))
             .ToList<Variable>();
         this.typeParamInstantiation = savedTypeParamInstantiation;
         return instantiatedVariables;
@@ -1150,7 +1150,7 @@ namespace Microsoft.Boogie
     {
       if (!monomorphizationVisitor.GetTypeInstantiation(decl, out Tuple<DeclWithFormals, Dictionary<string, Type>> value))
       {
-        return null;
+        return decl;
       }
       return value.Item1;
     }
@@ -1168,7 +1168,7 @@ namespace Microsoft.Boogie
     {
       if (!monomorphizationVisitor.GetTypeInstantiation(decl, out Tuple<TypeCtorDecl, List<Type>> value))
       {
-        return null;
+        return decl;
       }
       return value.Item1;
     }

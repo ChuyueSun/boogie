@@ -142,6 +142,11 @@ namespace Microsoft.Boogie
     public void TypeCheck()
     {
       linearTypeChecker.TypeCheck();
+      if (checkingContext.ErrorCount > 0)
+      {
+        return;
+      }
+      
       TypeCheckGlobalVariables();
       TypeCheckLemmaProcedures();
       TypeCheckYieldInvariants();
@@ -285,10 +290,6 @@ namespace Microsoft.Boogie
           {
             Error(proc, "Action must be either an atomic action or introduction action");
           }
-          else if (layerRange.lowerLayerNum != layerRange.upperLayerNum)
-          {
-            Error(proc, "Layer range of an introduction action should be singleton");
-          }
           else if (proc.Modifies.Any(ie => GlobalVariableLayerRange(ie.Decl).lowerLayerNum != layerRange.lowerLayerNum))
           {
             Error(proc, "Introduction actions can modify a global variable only on its introduction layer");
@@ -347,7 +348,7 @@ namespace Microsoft.Boogie
         LayerRange layerRange = actionProcToLayerRange[proc];
         if (proc.HasAttribute(CivlAttributes.INTRO))
         {
-          procToIntroductionAction[proc] = new IntroductionAction(proc, impl, layerRange);
+          procToIntroductionAction[proc] = new IntroductionAction(proc, impl, layerRange, Options);
         }
         else
         {
@@ -817,18 +818,18 @@ namespace Microsoft.Boogie
             // For error messages below
             string name1 = formals1[i].Name;
             string name2 = formals2[i].Name;
-            string msg = (name1 == name2) ? name1 : $"{name1} (named {name2} in {decl2.Name})";
-
-            // the names of the formals are allowed to change from the proc to the impl
-            // but types must be identical
+            
             Type t1 = formals1[i].TypedIdent.Type;
             Type t2 = formals2[i].TypedIdent.Type;
-            if (!t1.Equals(t2))
+            if (name1 != name2)
             {
-              checkingContext.Error(formals1[i], $"mismatched type of {inout}-parameter in {decl2.Name}: {msg}");
+              checkingContext.Error(formals1[i], $"mismatched name of {inout}-parameter {name1}: (named {name2} in {decl2.Name})");
             }
-
-            if (checkLinearity &&
+            else if (!t1.Equals(t2))
+            {
+              checkingContext.Error(formals1[i], $"mismatched type of {inout}-parameter {name1} in {decl2.Name}");
+            }
+            else if (checkLinearity &&
                 (QKeyValue.FindStringAttribute(formals1[i].Attributes, CivlAttributes.LINEAR) !=
                  QKeyValue.FindStringAttribute(formals2[i].Attributes, CivlAttributes.LINEAR) ||
                  QKeyValue.FindStringAttribute(formals1[i].Attributes, CivlAttributes.LINEAR_IN) !=
@@ -837,7 +838,7 @@ namespace Microsoft.Boogie
                  QKeyValue.FindStringAttribute(formals2[i].Attributes, CivlAttributes.LINEAR_OUT)))
             {
               checkingContext.Error(formals1[i],
-                $"mismatched linearity type of {inout}-parameter in {decl2.Name}: {msg}");
+                $"mismatched linearity annotation of {inout}-parameter {name1} in {decl2.Name}");
             }
           }
         }
@@ -1617,7 +1618,7 @@ namespace Microsoft.Boogie
 
         if (!(attr.Params[0] is string yieldInvariantProcName))
         {
-          civlTypeChecker.Error(attr, "Name of a yield invariant must be provided at position 1");
+          civlTypeChecker.Error(attr, $"Illegal yield invariant name: {attr.Params[0]}");
           return;
         }
 
@@ -1638,7 +1639,7 @@ namespace Microsoft.Boogie
           }
           else
           {
-            civlTypeChecker.Error(attr, $"Illegal expression at position {i}");
+            civlTypeChecker.Error(attr, $"Illegal expression: {attr.Params[i]}");
           }
         }
 
@@ -1858,17 +1859,33 @@ namespace Microsoft.Boogie
               lhsLayerRange.Subset(civlTypeChecker.LocalVariableLayerRange(x.Decl))))
             {
               civlTypeChecker.checkingContext.Error(node,
-                "Layer range mismatch at position {0}: local variables accessed in rhs must be available at all layers where the lhs exists",
-                i);
+                $"Variables accessed in the source of assignment to {lhs} must exist at all layers where {lhs} exists");
             }
-
             localVariableAccesses = null;
           }
         }
-
         return cmd;
       }
 
+      public override Cmd VisitUnpackCmd(UnpackCmd node)
+      {
+        var cmd = base.VisitUnpackCmd(node);
+        localVariableAccesses = new List<IdentifierExpr>();
+        base.Visit(node.Rhs);
+        node.UnpackedLhs.Select(ie => ie.Decl).OfType<LocalVariable>().Iter(lhs =>
+        {
+          var lhsLayerRange = civlTypeChecker.LocalVariableLayerRange(lhs);
+          if (!localVariableAccesses.TrueForAll(x =>
+                lhsLayerRange.Subset(civlTypeChecker.LocalVariableLayerRange(x.Decl))))
+          {
+            civlTypeChecker.checkingContext.Error(node,
+              $"Variables accessed in the unpacked expression must exist at all layers where {lhs} exists");
+          }
+        });
+        localVariableAccesses = null;
+        return cmd;
+      }
+      
       public void VisitSpecPre()
       {
         globalVariableAccesses = new List<IdentifierExpr>();

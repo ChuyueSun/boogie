@@ -79,7 +79,7 @@ namespace Microsoft.Boogie
     public abstract void Typecheck(TypecheckingContext /*!*/ tc);
 
     /// <summary>
-    /// Intorduced this so the uniqueId is not the same on a cloned object.
+    /// Introduced so the uniqueId is not the same on a cloned object.
     /// </summary>
     /// <param name="tc"></param>
     public virtual Absy Clone()
@@ -365,6 +365,12 @@ namespace Microsoft.Boogie
             Console.WriteLine("Warning: Ignoring implementation {0} because of translation resolution errors",
               ((Implementation) d).Name);
             rc.ErrorCount = e;
+            continue;
+          }
+          if (d is DatatypeConstructor)
+          {
+            // resolving a constructor adds it to its datatype declaration
+            // so we remove it from TopLevelDeclarations
             continue;
           }
         }

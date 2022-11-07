@@ -50,7 +50,6 @@ namespace Microsoft.Boogie
       {
         errorCount += ResolveAndTypecheck(options, absy);
       }
-
       return errorCount;
     }
   }
