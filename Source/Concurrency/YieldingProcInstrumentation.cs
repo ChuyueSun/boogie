@@ -78,7 +78,7 @@ namespace Microsoft.Boogie
       {
         inputs.Add(OldGlobalFormal(g));
       }
-
+      Console.WriteLine("yielding proc line 81");
       wrapperNoninterferenceCheckerProc = DeclHelper.Procedure(
         civlTypeChecker.AddNamePrefix($"Wrapper_NoninterferenceChecker_{layerNum}"),
         inputs, new List<Variable>(), new List<Requires>(), new List<IdentifierExpr>(), new List<Ensures>());

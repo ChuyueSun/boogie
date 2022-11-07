@@ -1034,6 +1034,8 @@ namespace Microsoft.Boogie
 
     public void AddAttribute(string name, params object[] vals)
     {
+      Console.Write("adding attribute name: "+ name);
+      Console.WriteLine(" attribute vals: "+ vals);
       Contract.Requires(name != null);
       QKeyValue kv;
       for (kv = this.Attributes; kv != null; kv = kv.Next)
@@ -1048,6 +1050,32 @@ namespace Microsoft.Boogie
       if (kv == null)
       {
         Attributes = new QKeyValue(tok, name, new List<object /*!*/>(vals), Attributes);
+      }
+    }
+
+    public void printAttribute()
+    {
+      Console.Write("printing attributes: ");
+      QKeyValue kv;
+      for (kv = this.Attributes; kv != null; kv = kv.Next)
+      {
+        Console.WriteLine(kv.Key);
+      }
+    }
+    public void clearAttribute(string name)
+    {
+      Console.WriteLine("clearing attribute name: "+ name);
+
+      Contract.Requires(name != null);
+      QKeyValue kv;
+      for (kv = this.Attributes; kv != null; kv = kv.Next)
+      {
+        Console.WriteLine(kv.Key);
+        if (kv.Key == name)
+        {
+          kv.ClearParams();
+          break;
+        }
       }
     }
 
@@ -2681,13 +2709,14 @@ namespace Microsoft.Boogie
 
       stream.Write(this, level, "function ");
       EmitAttributes(stream);
-      if (Body != null && !QKeyValue.FindBoolAttribute(Attributes, "inline"))
+      if (Body != null && !QKeyValue.FindBoolAttribute(Attributes, "inline") && !QKeyValue.FindBoolAttribute(Attributes, "define"))
       {
         Contract.Assert(DefinitionBody == null);
         // Boogie inlines any function whose .Body field is non-null.  The parser populates the .Body field
         // if the :inline attribute is present, but if someone creates the Boogie file directly as an AST, then
         // the :inline attribute may not be there.  We'll make sure it's printed, so one can see that this means
         // that the body will be inlined.
+        Console.WriteLine("Emit inline 2719");
         stream.Write("{:inline} ");
       }
 

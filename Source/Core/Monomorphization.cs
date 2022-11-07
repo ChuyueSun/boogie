@@ -15,8 +15,10 @@ namespace Microsoft.Boogie
 
     public static bool IsMonomorphic(Program program)
     {
+      Console.WriteLine("public mono checker program: "+ program);
       var checker = new MonomorphismChecker();
       checker.VisitProgram(program);
+      Console.WriteLine("after visit mono is : "+checker.isMonomorphic);
       return checker.isMonomorphic;
     }
     
@@ -29,6 +31,7 @@ namespace Microsoft.Boogie
     
     public override DeclWithFormals VisitDeclWithFormals(DeclWithFormals node)
     {
+      // Console.WriteLine("visit decl with formals"+node);
       if (node.TypeParameters.Count > 0)
       {
         isMonomorphic = false;
@@ -38,6 +41,7 @@ namespace Microsoft.Boogie
 
     public override BinderExpr VisitBinderExpr(BinderExpr node)
     {
+      // Console.WriteLine("visit binder expr "+node);
       if (node.TypeParameters.Count > 0)
       {
         isMonomorphic = false;
@@ -56,9 +60,11 @@ namespace Microsoft.Boogie
 
     public override Expr VisitNAryExpr(NAryExpr node)
     {
+      // Console.WriteLine("visit nary: "+node);
       BinaryOperator op = node.Fun as BinaryOperator;
       if (op != null && op.Op == BinaryOperator.Opcode.Subtype)
       {
+        Console.WriteLine("nary mono false");
         isMonomorphic = false;
       }
       return base.VisitNAryExpr(node);
@@ -161,6 +167,7 @@ namespace Microsoft.Boogie
       this.axiomsToBeInstantiated = new Dictionary<Axiom, TypeCtorDecl>();
       this.typeVariableDependencyGraph = new Graph<TypeVariable>();
       this.strongDependencyEdges = new HashSet<Tuple<TypeVariable, TypeVariable>>();
+      Console.WriteLine("mono checker constructor: "+this.isMonomorphizable);
     }
 
     private bool IsFinitelyInstantiable()
@@ -184,6 +191,7 @@ namespace Microsoft.Boogie
     {
       if (node.TypeParameters.Count > 0)
       {
+        // Console.WriteLine("Boogie: visitbinder expr mono set to false: "+node);
         isMonomorphizable = false;
       }
       return base.VisitBinderExpr(node);
@@ -193,6 +201,8 @@ namespace Microsoft.Boogie
     {
       if (node.Fun is BinaryOperator op && op.Op == BinaryOperator.Opcode.Subtype)
       {
+        Console.WriteLine("Boogie: visitnary expr mono set to false: "+node);
+    
         isMonomorphizable = false;
       }
       else if (node.Fun is FunctionCall functionCall)
@@ -222,6 +232,7 @@ namespace Microsoft.Boogie
     {
       if (node.TypeParameters.Count > 0)
       {
+        // Console.WriteLine("Boogie: visitmap expr mono set to false: "+node);
         isMonomorphizable = false;
       }
       return base.VisitMapType(node);
@@ -232,12 +243,14 @@ namespace Microsoft.Boogie
       var tcDecl = program.TopLevelDeclarations.OfType<TypeCtorDecl>().FirstOrDefault(tcd => tcd.Name == typeCtorName);
       if (tcDecl == null)
       {
+        // Console.WriteLine("Boogie: checktypeaxiom expr mono set to false: "+axiom);
         isMonomorphizable = false;
         return;
       }
       var forallExpr = (ForallExpr) axiom.Expr;
       if (tcDecl.Arity != forallExpr.TypeParameters.Count)
       {
+        // Console.WriteLine("Boogie: checltypeaxiom2 expr mono set to false: "+typeCtorName);
         isMonomorphizable = false;
         return;
       }
@@ -292,6 +305,7 @@ namespace Microsoft.Boogie
     {
       if (node.ProxyFor == null)
       {
+        // Console.WriteLine("Boogie: visittypeproxy expr mono set to false: "+node);
         isMonomorphizable = false;
       }
       else
@@ -1118,6 +1132,7 @@ namespace Microsoft.Boogie
         var monomorphizationVisitor = MonomorphizationVisitor.Initialize(options, program, axiomsToBeInstantiated, polymorphicFunctionAxioms);
         program.monomorphizer = new Monomorphizer(monomorphizationVisitor);
       }
+      Console.WriteLine("Boogie: mono status is : "+ monomorphizableStatus);
       return monomorphizableStatus;
     }
 

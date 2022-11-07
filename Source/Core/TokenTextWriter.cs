@@ -11,7 +11,7 @@ namespace Microsoft.Boogie
     public PrintOptions Options { get; }
     string /*!*/ filename;
 
-    TextWriter /*!*/ writer;
+    public TextWriter /*!*/ writer;
 
     [ContractInvariantMethod]
     void ObjectInvariant()
@@ -286,6 +286,7 @@ namespace Microsoft.Boogie
       this.Options = options;
       this.filename = filename;
       this.writer = new StreamWriter(filename);
+      Console.SetOut(this.writer);
     }
 
     public TokenTextWriter(string filename, bool setTokens, bool pretty, CoreOptions options)

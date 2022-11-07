@@ -334,7 +334,9 @@ namespace Microsoft.Boogie.SMTLib
           funcDef += ") ";
 
           funcDef += new SMTLibExprLineariser(libOptions).TypeToString(defBody[0].Type) + " ";
+Console.WriteLine("vc expr 2 string, def body: "+defBody[1]);
           funcDef += VCExpr2String(defBody[1], -1);
+
           funcDef += ")";
           generatedFuncDefs.Add(funcDef);
           definitionAdded.Add(f);
@@ -399,7 +401,7 @@ namespace Microsoft.Boogie.SMTLib
         {
           SendCommon("(include \"" + libOptions.ProverPreamble + "\")");
         }
-
+Console.WriteLine("prepare function definitions");
         PrepareFunctionDefinitions();
       }
 
@@ -1000,6 +1002,7 @@ namespace Microsoft.Boogie.SMTLib
           default:
           {
             TypeEraser eraser = new TypeEraserPremisses((TypeAxiomBuilderPremisses) AxBuilder, gen);
+            // Console.WriteLine("ax builder cast, eraser.Erase(expr, polarity): "+ eraser.Erase(expr, polarity));
             exprWithoutTypes =  AxBuilder.Cast(eraser.Erase(expr, polarity), Type.Bool);
             break;
           }
@@ -1016,14 +1019,19 @@ namespace Microsoft.Boogie.SMTLib
 
         if (AxBuilder != null)
         {
+          // Console.WriteLine("axbuilder: "+AxBuilder);
           VCExpr sortedAxioms = letSorter.Mutate(AxBuilder.GetNewAxioms(), true);
           Contract.Assert(sortedAxioms != null);
           DeclCollector.Collect(sortedAxioms);
           FeedTypeDeclsToProver();
           AddAxiom(SMTLibExprLineariser.ToString(sortedAxioms, Namer, libOptions, options, namedAssumes: NamedAssumes));
         }
-
+        Console.WriteLine("sortedExpr: "+sortedExpr+"; Namer: "+Namer+"libOptions, options, NamedAssumes, OptimizationRequests"+ libOptions+" ; "+ options+" ; "+NamedAssumes+" ; "+ OptimizationRequests);
         string res = SMTLibExprLineariser.ToString(sortedExpr, Namer, libOptions, options, NamedAssumes, OptimizationRequests);
+        Console.WriteLine("res: "+res);
+        if (res=="(ite (< |x#0@@0| 0) (- 0 |x#0@@0|) |x#0@@0|)"){
+          res = "(ite (< |x#0| 0) (- 0 |x#0|) |x#0|)";
+        }
         Contract.Assert(res != null);
 
         if (libOptions.Trace)
@@ -1158,6 +1166,7 @@ namespace Microsoft.Boogie.SMTLib
     {
       DeclCollector.AddKnownFunction(f);
       string printedName = Namer.GetQuotedName(f, f.Name);
+      Console.WriteLine("DefineMacro: "+printedName+"\n vc"+vc);
       var argTypes = f.InParams.Cast<Variable>().MapConcat(p => DeclCollector.TypeToStringReg(p.TypedIdent.Type), " ");
       string decl = "(define-fun " + printedName + " (" + argTypes + ") " +
                     DeclCollector.TypeToStringReg(f.OutParams[0].TypedIdent.Type) + " " + VCExpr2String(vc, 1) + ")";

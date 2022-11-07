@@ -1342,6 +1342,7 @@ namespace Microsoft.Boogie
           return true;
 
         case "monomorphize":
+        Console.WriteLine("boogie: cmd line options monormophize set to true");
           if (ps.ConfirmArgumentCount(0))
           {
             Monomorphize = true;

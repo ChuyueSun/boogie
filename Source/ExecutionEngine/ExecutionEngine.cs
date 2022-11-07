@@ -156,7 +156,7 @@ namespace Microsoft.Boogie
       EliminateDeadVariables(program);
 
       CoalesceBlocks(program);
-
+      Console.WriteLine("execution engine 159");
       Inline(program);
 
       var stats = new PipelineStatistics();
@@ -459,7 +459,7 @@ namespace Microsoft.Boogie
     public void Inline(Program program)
     {
       Contract.Requires(program != null);
-
+      Console.WriteLine("Inline is called");
       if (Options.Trace)
       {
         Console.WriteLine("Inlining...");

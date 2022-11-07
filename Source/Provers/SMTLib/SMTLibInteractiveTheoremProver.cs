@@ -676,6 +676,7 @@ namespace Microsoft.Boogie.SMTLib
     protected override void PrepareCommon() {
       var currentNamer = finalNamer;
       finalNamer = null;
+      Console.WriteLine("prepare common");
       base.PrepareCommon();
       finalNamer = currentNamer;
     }

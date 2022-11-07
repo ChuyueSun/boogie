@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System;
+
 
 namespace Microsoft.Boogie
 {
@@ -8,6 +10,7 @@ namespace Microsoft.Boogie
   {
     public static void AddInlineAttribute(Declaration decl)
     {
+      Console.WriteLine("CivilUtil addInlineAttribute");
       decl.AddAttribute("inline", Expr.Literal(1));
     }
 

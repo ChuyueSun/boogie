@@ -858,6 +858,7 @@ namespace Microsoft.Boogie.TypeErasure
 
     public override VCExpr Cast(VCExpr expr, Type toType)
     {
+      
       Contract.Requires(toType != null);
       Contract.Requires(expr != null);
       Contract.Requires((expr.Type.Equals(U) || UnchangedType(expr.Type)));
@@ -874,8 +875,17 @@ namespace Microsoft.Boogie.TypeErasure
       }
       else
       {
-        Contract.Assert(expr.Type.Equals(U));
-        return Gen.Function(CastTo(toType), expr);
+        // Console.WriteLine("Boogie: type erasure fail");
+        // Console.WriteLine(expr);
+        // Contract.Assert(expr.Type.Equals(U));
+        if(expr.Type.Equals(U)){
+            return Gen.Function(CastTo(toType), expr);
+        }
+        else{
+          Console.WriteLine("Cast: expr: "+expr+" toType: "+toType);
+        return expr;
+        }
+        
       }
     }
 
