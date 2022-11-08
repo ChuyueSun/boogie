@@ -156,7 +156,7 @@ namespace Microsoft.Boogie
       EliminateDeadVariables(program);
 
       CoalesceBlocks(program);
-      Console.WriteLine("execution engine 159");
+      // Console.WriteLine("execution engine 159");
       Inline(program);
 
       var stats = new PipelineStatistics();

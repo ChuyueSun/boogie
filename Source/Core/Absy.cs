@@ -1041,7 +1041,7 @@ namespace Microsoft.Boogie
     public void AddAttribute(string name, params object[] vals)
     {
       Console.Write("adding attribute name: "+ name);
-      Console.WriteLine(" attribute vals: "+ vals);
+      // Console.WriteLine(" attribute vals: "+ vals);
       Contract.Requires(name != null);
       QKeyValue kv;
       for (kv = this.Attributes; kv != null; kv = kv.Next)

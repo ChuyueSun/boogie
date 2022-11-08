@@ -91,7 +91,7 @@ namespace Microsoft.Boogie
         oldGlobalMap[g] = OldGlobalLocal(g);
         wrapperNoninterferenceCheckerCallArgs.Add(oldGlobalMap[g]);
       }
-      Console.WriteLine("yielding proc line 81");
+      // Console.WriteLine("yielding proc line 81");
       wrapperNoninterferenceCheckerProc = DeclHelper.Procedure(
         civlTypeChecker.AddNamePrefix($"Wrapper_NoninterferenceChecker_{layerNum}"),
         wrapperNoninterferenceCheckerFormals, new List<Variable>(), new List<Requires>(), new List<IdentifierExpr>(), new List<Ensures>());

@@ -319,7 +319,7 @@ namespace Microsoft.Boogie
       {
         return;
       }
-      Console.WriteLine("CivlTypeChecker 321 commentted out");
+      // Console.WriteLine("CivlTypeChecker 321 commentted out");
       CivlUtil.AddInlineAttribute(SkipAtomicAction.proc);
       actionProcs.Iter(proc =>
       {

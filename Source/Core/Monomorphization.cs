@@ -15,10 +15,10 @@ namespace Microsoft.Boogie
 
     public static bool IsMonomorphic(Program program)
     {
-      Console.WriteLine("public mono checker program: "+ program);
+      // Console.WriteLine("public mono checker program: "+ program);
       var checker = new MonomorphismChecker();
       checker.VisitProgram(program);
-      Console.WriteLine("after visit mono is : "+checker.isMonomorphic);
+      // Console.WriteLine("after visit mono is : "+checker.isMonomorphic);
       return checker.isMonomorphic;
     }
     
@@ -64,7 +64,7 @@ namespace Microsoft.Boogie
       BinaryOperator op = node.Fun as BinaryOperator;
       if (op != null && op.Op == BinaryOperator.Opcode.Subtype)
       {
-        Console.WriteLine("nary mono false");
+        // Console.WriteLine("nary mono false");
         isMonomorphic = false;
       }
       return base.VisitNAryExpr(node);
@@ -167,7 +167,7 @@ namespace Microsoft.Boogie
       this.axiomsToBeInstantiated = new Dictionary<Axiom, TypeCtorDecl>();
       this.typeVariableDependencyGraph = new Graph<TypeVariable>();
       this.strongDependencyEdges = new HashSet<Tuple<TypeVariable, TypeVariable>>();
-      Console.WriteLine("mono checker constructor: "+this.isMonomorphizable);
+      // Console.WriteLine("mono checker constructor: "+this.isMonomorphizable);
     }
 
     private bool IsFinitelyInstantiable()

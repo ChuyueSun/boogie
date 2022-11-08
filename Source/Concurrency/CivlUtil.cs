@@ -10,7 +10,7 @@ namespace Microsoft.Boogie
   {
     public static void AddInlineAttribute(Declaration decl)
     {
-      Console.WriteLine("CivilUtil addInlineAttribute");
+      // Console.WriteLine("CivilUtil addInlineAttribute");
       decl.AddAttribute("inline", Expr.Literal(1));
     }
 
