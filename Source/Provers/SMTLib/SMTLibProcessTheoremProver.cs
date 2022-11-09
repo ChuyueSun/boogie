@@ -318,7 +318,7 @@ namespace Microsoft.Boogie.SMTLib
           funcDef += ") ";
 
           funcDef += new SMTLibExprLineariser(libOptions).TypeToString(defBody[0].Type) + " ";
-Console.WriteLine("vc expr 2 string, def body: "+defBody[1]);
+// Console.WriteLine("vc expr 2 string, def body: "+defBody[1]);
           funcDef += VCExpr2String(defBody[1], -1);
 
           funcDef += ")";
@@ -1010,9 +1010,9 @@ Console.WriteLine("prepare function definitions");
           FeedTypeDeclsToProver();
           AddAxiom(SMTLibExprLineariser.ToString(sortedAxioms, Namer, libOptions, options, namedAssumes: NamedAssumes));
         }
-        Console.WriteLine("sortedExpr: "+sortedExpr+"; Namer: "+Namer+"libOptions, options, NamedAssumes, OptimizationRequests"+ libOptions+" ; "+ options+" ; "+NamedAssumes+" ; "+ OptimizationRequests);
+        // Console.WriteLine("sortedExpr: "+sortedExpr+"; Namer: "+Namer+"libOptions, options, NamedAssumes, OptimizationRequests"+ libOptions+" ; "+ options+" ; "+NamedAssumes+" ; "+ OptimizationRequests);
         string res = SMTLibExprLineariser.ToString(sortedExpr, Namer, libOptions, options, NamedAssumes, OptimizationRequests);
-        Console.WriteLine("res: "+res);
+        // Console.WriteLine("res: "+res);
         if (res=="(ite (< |x#0@@0| 0) (- 0 |x#0@@0|) |x#0@@0|)"){
           res = "(ite (< |x#0| 0) (- 0 |x#0|) |x#0|)";
         }

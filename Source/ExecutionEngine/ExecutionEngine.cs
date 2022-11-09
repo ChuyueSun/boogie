@@ -465,7 +465,7 @@ namespace Microsoft.Boogie
     public void Inline(Program program)
     {
       Contract.Requires(program != null);
-      Console.WriteLine("Inline is called");
+      // Console.WriteLine("Inline is called");
       if (Options.Trace)
       {
         Console.WriteLine("Inlining...");

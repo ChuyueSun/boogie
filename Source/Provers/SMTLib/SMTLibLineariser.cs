@@ -70,13 +70,13 @@ namespace Microsoft.Boogie.SMTLib
       Contract.Ensures(Contract.Result<string>() != null);
 
       StringWriter sw = new StringWriter();
-      Console.WriteLine("sw1: "+ sw.ToString());
+      // Console.WriteLine("sw1: "+ sw.ToString());
       SMTLibExprLineariser lin = new SMTLibExprLineariser(sw, namer, libOptions, opts, namedAssumes, optReqs);
       Contract.Assert(lin != null);
-      Console.WriteLine("sw2: "+ sw.ToString());
+      // Console.WriteLine("sw2: "+ sw.ToString());
       lin.Linearise(e, LineariserOptions.Default);
-      Console.WriteLine("lin: "+ lin);
-      Console.WriteLine("sw3: "+ sw.ToString());
+      // Console.WriteLine("lin: "+ lin);
+      // Console.WriteLine("sw3: "+ sw.ToString());
       return cce.NonNull(sw.ToString());
     }
 

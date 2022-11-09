@@ -882,7 +882,7 @@ namespace Microsoft.Boogie.TypeErasure
             return Gen.Function(CastTo(toType), expr);
         }
         else{
-          Console.WriteLine("Cast: expr: "+expr+" toType: "+toType);
+          // Console.WriteLine("Cast: expr: "+expr+" toType: "+toType);
         return expr;
         }
         
