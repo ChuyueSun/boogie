@@ -2722,7 +2722,6 @@ namespace Microsoft.Boogie
         // if the :inline attribute is present, but if someone creates the Boogie file directly as an AST, then
         // the :inline attribute may not be there.  We'll make sure it's printed, so one can see that this means
         // that the body will be inlined.
-        Console.WriteLine("Emit inline 2719");
         stream.Write("{:inline} ");
       }
 
