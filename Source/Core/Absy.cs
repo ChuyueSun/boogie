@@ -1061,7 +1061,7 @@ namespace Microsoft.Boogie
 
     public void printAttribute()
     {
-      Console.Write("printing attributes: ");
+      Console.WriteLine("printing attributes: ");
       QKeyValue kv;
       for (kv = this.Attributes; kv != null; kv = kv.Next)
       {
