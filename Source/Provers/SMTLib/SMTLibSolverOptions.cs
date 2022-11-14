@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics.Contracts;
-
+using System;
 namespace Microsoft.Boogie.SMTLib
 {
   public class OptionValue
@@ -80,6 +80,7 @@ namespace Microsoft.Boogie.SMTLib
 
     protected override bool Parse(string opt)
     {
+      Console.WriteLine("!!!opt: "+opt);
       if (opt.StartsWith("O:"))
       {
         AddSmtOption(opt.Substring(2));
@@ -115,6 +116,13 @@ namespace Microsoft.Boogie.SMTLib
         }
 
         return true;
+      }
+      string solverPathStr = null;
+      if (ParseString(opt, "PROVER_PATH", ref solverPathStr)){
+        if (solverPathStr.Contains("cvc5")){
+          Solver = SolverKind.CVC5;
+          Console.WriteLine("Solver set to cvc5");
+        }
       }
 
       return

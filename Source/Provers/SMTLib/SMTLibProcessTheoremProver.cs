@@ -385,7 +385,6 @@ namespace Microsoft.Boogie.SMTLib
         {
           SendCommon("(include \"" + libOptions.ProverPreamble + "\")");
         }
-Console.WriteLine("prepare function definitions");
         PrepareFunctionDefinitions();
       }
 

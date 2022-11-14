@@ -166,6 +166,7 @@ namespace Microsoft.Boogie.SMTLib
     {
       if (options.Solver == SolverKind.Z3 || options.Solver == SolverKind.NoOpWithZ3Options)
       {
+        Console.WriteLine("Using z3 solver");
         this.gen = generator;
         SendThisVC("(reset)");
         SendThisVC("(set-option :" + Z3.RlimitOption + " 0)");
@@ -676,7 +677,6 @@ namespace Microsoft.Boogie.SMTLib
     protected override void PrepareCommon() {
       var currentNamer = finalNamer;
       finalNamer = null;
-      Console.WriteLine("prepare common");
       base.PrepareCommon();
       finalNamer = currentNamer;
     }
