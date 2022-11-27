@@ -57,6 +57,11 @@ namespace Microsoft.Boogie
   // Handy syntactic sugar missing in Expr
   public static class ExprHelper
   {
+    public static NAryExpr FunctionCall(IAppliable f, params Expr[] args)
+    {
+      return new NAryExpr(Token.NoToken, f, args);
+    }
+
     public static NAryExpr FunctionCall(Function f, params Expr[] args)
     {
       return new NAryExpr(Token.NoToken, new FunctionCall(f), args);
@@ -153,16 +158,6 @@ namespace Microsoft.Boogie
       return new FieldAssignLhs(Token.NoToken, ExprToAssignLhs(path), new FieldAccess(Token.NoToken, fieldName));
     }
     
-    public static MapAssignLhs MapAssignLhs(AssignLhs path, List<Expr> args)
-    {
-      return new MapAssignLhs(Token.NoToken, path, args);
-    }
-    
-    public static MapAssignLhs MapAssignLhs(Expr path, List<Expr> args)
-    {
-      return new MapAssignLhs(Token.NoToken, ExprToAssignLhs(path), args);
-    }
-    
     public static AssignLhs ExprToAssignLhs(Expr e)
     {
       if (e is IdentifierExpr ie)
@@ -176,7 +171,7 @@ namespace Microsoft.Boogie
       }
       if (naryExpr.Fun is MapSelect)
       {
-        return MapAssignLhs(naryExpr.Args[0], naryExpr.Args.ToList().GetRange(1, naryExpr.Args.Count - 1));
+        return new MapAssignLhs(Token.NoToken, ExprToAssignLhs(naryExpr.Args[0]), naryExpr.Args.ToList().GetRange(1, naryExpr.Args.Count - 1));
       }
       Contract.Assume(false, "Unexpected expression");
       return null;
@@ -202,6 +197,11 @@ namespace Microsoft.Boogie
     public static HavocCmd HavocCmd(List<IdentifierExpr> vars)
     {
       return new HavocCmd(Token.NoToken, vars);
+    }
+
+    public static HavocCmd HavocCmd(params IdentifierExpr[] vars)
+    {
+      return new HavocCmd(Token.NoToken, vars.ToList());
     }
   }
 

@@ -289,8 +289,7 @@ namespace Microsoft.Boogie
             civlTypeChecker.GlobalVariables.Select(v => Expr.Ident(v)).ToList()));
         }
 
-        linearPermissionInstrumentation.DisjointnessExprs(impl, true).ForEach(
-          expr => initCmds.Add(CmdHelper.AssumeCmd(expr)));
+        initCmds.AddRange(linearPermissionInstrumentation.DisjointnessAndWellFormedAssumeCmds(impl, true));
 
         Substitution procToImplInParams = Substituter.SubstitutionFromDictionary(impl.Proc.InParams
           .Zip(impl.InParams).ToDictionary(x => x.Item1, x => (Expr) Expr.Ident(x.Item2)));
@@ -368,7 +367,7 @@ namespace Microsoft.Boogie
         // Disjointness assumptions after yields are added inside TransformImpl which is called for 
         // all implementations except for a mover procedure at its disappearing layer.
         // But this is fine because a mover procedure at its disappearing layer does not have a yield in it.
-        linearPermissionInstrumentation.AddDisjointnessAssumptions(impl);
+        linearPermissionInstrumentation.AddDisjointnessAndWellFormedAssumptions(impl);
         var yieldingProc = GetYieldingProc(impl);
         if (yieldingProc is MoverProc && yieldingProc.upperLayer == layerNum)
         {
@@ -501,7 +500,7 @@ namespace Microsoft.Boogie
         header.Cmds = newCmds;
       }
 
-      // add jumps to noninterferenceCheckerBlock, returnBlock, and refinement blocks
+      // add jumps to noninterferenceChecker, returnChecker, and refinementChecker blocks
       var implRefinementCheckingBlocks = new List<Block>();
       foreach (var b in impl.Blocks)
       {
@@ -533,7 +532,6 @@ namespace Microsoft.Boogie
                     implRefinementCheckingBlocks.Add(targetBlock);
                   }
                 }
-
                 addEdge = true;
               }
             }
@@ -543,10 +541,15 @@ namespace Microsoft.Boogie
           if (addEdge)
           {
             AddEdge(gotoCmd, noninterferenceCheckerBlock);
-            AddEdge(gotoCmd,
-              blocksInYieldingLoops.Contains(b)
-                ? unchangedCheckerBlock
-                : refinementCheckerBlock);
+            if (blocksInYieldingLoops.Contains(b))
+            {
+              AddEdge(gotoCmd, unchangedCheckerBlock);
+            }
+            else
+            {
+              b.Cmds.AddRange(refinementInstrumentation.CreateActionEvaluationCmds());
+              AddEdge(gotoCmd, refinementCheckerBlock);
+            }
           }
         }
         else
@@ -556,7 +559,7 @@ namespace Microsoft.Boogie
         }
       }
 
-      // desugar YieldCmd, CallCmd, and ParCallCmd 
+      // desugar YieldCmd and ParCallCmd 
       foreach (Block b in impl.Blocks)
       {
         if (b.cmds.Count > 0)
@@ -674,6 +677,7 @@ namespace Microsoft.Boogie
     private Block CreateReturnCheckerBlock()
     {
       var returnBlockCmds = new List<Cmd>();
+      returnBlockCmds.AddRange(refinementInstrumentation.CreateActionEvaluationCmds());
       returnBlockCmds.AddRange(refinementInstrumentation.CreateAssertCmds());
       returnBlockCmds.AddRange(refinementInstrumentation.CreateUpdatesToRefinementVars(false));
       returnBlockCmds.AddRange(refinementInstrumentation.CreateReturnAssertCmds());
@@ -698,7 +702,7 @@ namespace Microsoft.Boogie
       }
 
       newCmds.AddRange(refinementInstrumentation.CreateAssumeCmds());
-      newCmds.AddRange(linearPermissionInstrumentation.DisjointnessAssumeCmds(yieldCmd, true));
+      newCmds.AddRange(linearPermissionInstrumentation.DisjointnessAndWellFormedAssumeCmds(yieldCmd, true));
       newCmds.AddRange(CreateUpdatesToOldGlobalVars());
       newCmds.AddRange(refinementInstrumentation.CreateUpdatesToOldOutputVars());
       newCmds.AddRange(CreateUpdatesToPermissionCollector(yieldCmd));
